@@ -54,6 +54,11 @@ if __name__ == '__main__':
     # check the type of the input tensor
     floating_model = input_details[0]['dtype'] == np.float32
 
+    input_type = input_details[0]['dtype']
+    print('input: ', input_type)
+    output_type = output_details[0]['dtype']
+    print('output: ', output_type)
+
     # NxHxWxC, H:1, W:2
     height = input_details[0]['shape'][2]
     width = input_details[0]['shape'][3]

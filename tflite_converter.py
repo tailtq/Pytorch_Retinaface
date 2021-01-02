@@ -5,27 +5,28 @@ import numpy as np
 
 def representative_dataset():
     for _ in range(100):
-      data = np.random.rand(1, 3, 480, 480)
+      data = np.random.rand(1, 3, 360, 360)
       yield [data.astype(np.float32)]
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-converter = tf.lite.TFLiteConverter.from_saved_model("test2")
+converter = tf.lite.TFLiteConverter.from_saved_model("test")
 
 # int8 - Convert using CPU (not working in GPU - document here: https://www.tensorflow.org/lite/performance/post_training_quantization)
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-converter.representative_dataset = representative_dataset
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8, tf.lite.OpsSet.SELECT_TF_OPS]
-converter.inference_input_type = tf.uint8  # or tf.uint8
-converter.inference_output_type = tf.uint8  # or tf.uint8
+# converter.optimizations = [tf.lite.Optimize.DEFAULT]
+# converter.representative_dataset = representative_dataset
+# converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8, tf.lite.OpsSet.SELECT_TF_OPS]
+# converter.inference_input_type = tf.uint8  # or tf.uint8
+# converter.inference_output_type = tf.uint8  # or tf.uint8
 
 # float16 - CPU and GPU are both working
-# converter.optimizations = [tf.lite.Optimize.DEFAULT]
-# converter.target_spec.supported_types = [tf.float16]
-# converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.target_spec.supported_types = [tf.float16]
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
 tflite_model = converter.convert()
-open("int8.tflite", "wb").write(tflite_model)
+open("360-float16.tflite", "wb").write(tflite_model)
 
 # ISSUES
 # AddV2 custom ops issue: https://github.com/tensorflow/tensorflow/issues/31901#issuecomment-607198654

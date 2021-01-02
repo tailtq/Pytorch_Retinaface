@@ -20,14 +20,14 @@ net = load_model(net, "mobilenet0.25_Final.pth", False)
 net = net.to(device)
 net.eval()
 
-ort_session = onnxruntime.InferenceSession("test2.onnx")
+ort_session = onnxruntime.InferenceSession("test.onnx")
 
-img = cv2.imread("./test-img2.jpeg", cv2.IMREAD_COLOR)
+img = cv2.imread("imgs/test-img2.jpeg", cv2.IMREAD_COLOR)
 img = np.float32(img)
 img -= (104, 117, 123)
 
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, (480, 480))
+img = cv2.resize(img, (360, 360))
 img = img.transpose((2, 0, 1))
 img = torch.from_numpy(img).unsqueeze(0)
 img = img.to(device)
