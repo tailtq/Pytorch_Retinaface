@@ -17,7 +17,6 @@ class PriorBox(object):
 
     def forward(self):
         anchors = []
-        start_time = time.time()
         for k, f in enumerate(self.feature_maps):
             min_sizes = self.min_sizes[k]
             for i, j in product(range(f[0]), range(f[1])):
@@ -28,7 +27,6 @@ class PriorBox(object):
                     dense_cy = [y * self.steps[k] / self.image_size[0] for y in [i + 0.5]]
                     for cy, cx in product(dense_cy, dense_cx):
                         anchors += [cx, cy, s_kx, s_ky]
-        print('TIME:', time.time() - start_time)
         # back to torch land
         output = torch.Tensor(anchors).view(-1, 4)
         if self.clip:

@@ -1,5 +1,6 @@
-import argparse
+import os
 import time
+import argparse
 
 import numpy as np
 from PIL import Image
@@ -7,10 +8,13 @@ from PIL import Image
 import tensorflow.lite as tflite
 
 
-def load_labels(filename):
-    with open(filename, 'r') as f:
-        return [line.strip() for line in f.readlines()]
+# def load_labels(filename):
+#     with open(filename, 'r') as f:
+#         return [line.strip() for line in f.readlines()]
 
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -41,8 +45,7 @@ if __name__ == '__main__':
         '--num_threads', default=None, type=int, help='number of threads')
     args = parser.parse_args()
 
-    interpreter = tflite.Interpreter(
-        model_path=args.model_file, num_threads=args.num_threads)
+    interpreter = tflite.Interpreter(model_path=args.model_file)
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
@@ -58,30 +61,25 @@ if __name__ == '__main__':
 
     # add N dim
     input_data = np.expand_dims(img, axis=0).transpose((0, 3, 1, 2))
+    print(input_data.shape)
+
+    # Cannot use GPU delegate: https://www.tensorflow.org/lite/performance/delegates (work for Android + iOS only based on document)
 
     if floating_model:
         input_data = (np.float32(input_data) - args.input_mean) / args.input_std
 
-    interpreter.set_tensor(input_details[0]['index'], input_data)
+    for i in range(100):
+        interpreter.set_tensor(input_details[0]['index'], input_data)
 
-    start_time = time.time()
-    interpreter.invoke()
-    stop_time = time.time()
+        start_time = time.time()
+        interpreter.invoke()
+        stop_time = time.time()
 
-    print(interpreter.get_tensor(output_details[0]['index']).shape)
-    print(interpreter.get_tensor(output_details[1]['index']).shape)
-    print(interpreter.get_tensor(output_details[2]['index']).shape)
+        print(interpreter.get_tensor(output_details[0]['index']).shape)
+        print(interpreter.get_tensor(output_details[1]['index']).shape)
+        print(interpreter.get_tensor(output_details[2]['index']).shape)
 
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    results = np.squeeze(output_data)
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+        results = np.squeeze(output_data)
 
-    top_k = results.argsort()[-5:][::-1]
-    # labels = load_labels(args.label_file)
-    for i in top_k:
-        print(i)
-        # if floating_model:
-        #     print('{:08.6f}: {}'.format(float(results[i]), labels[i]))
-        # else:
-        #     print('{:08.6f}: {}'.format(float(results[i] / 255.0), labels[i]))
-
-    print('time: {:.3f}ms'.format((stop_time - start_time) * 1000))
+        print('time: {:.4f}'.format((stop_time - start_time)))
