@@ -1,0 +1,90 @@
+{
+  "name": "MobileNetV1 image classifier",
+  "description": "Identify the most prominent object in the image from a set of 1 categories.",
+  "version": "v1",
+  "subgraph_metadata": [
+    {
+      "input_tensor_metadata": [
+        {
+          "name": "image",
+          "description": "Input image to be classified. The expected image is 360 x 360, with three channels (red, blue, and green) per pixel. Each value in the tensor is a single byte between 0 and 255.",
+          "content": {
+            "content_properties_type": "ImageProperties",
+            "content_properties": {
+              "color_space": "RGB"
+            }
+          },
+          "process_units": [
+            {
+              "options_type": "NormalizationOptions",
+              "options": {
+                "mean": [
+                  127.5
+                ],
+                "std": [
+                  127.5
+                ]
+              }
+            }
+          ],
+          "stats": {
+            "max": [
+              255.0
+            ],
+            "min": [
+              0.0
+            ]
+          }
+        }
+      ],
+      "output_tensor_metadata": [
+        {
+          "name": "location",
+          "description": "The locations of the detected boxes.",
+          "content": {
+            "content_properties_type": "BoundingBoxProperties",
+            "content_properties": {
+              "index": [
+                1,
+                0,
+                3,
+                2
+              ],
+              "type": "BOUNDARIES"
+            },
+            "range": {
+              "max": 255
+            }
+          }
+        },
+        {
+          "name": "confidence",
+          "description": "The confidences of the detected boxes.",
+          "content": {
+            "content_properties_type": "FeatureProperties",
+            "content_properties": {
+            },
+            "range": {
+              "max": 255
+            }
+          }
+        },
+        {
+          "name": "landmark",
+          "description": "The landmark of the detected boxes.",
+          "content": {
+            "content_properties_type": "FeatureProperties",
+            "content_properties": {
+            },
+            "range": {
+              "max": 255
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "author": "TensorFlow",
+  "license": "Apache License. Version 2.0 http://www.apache.org/licenses/LICENSE-2.0.",
+  "min_parser_version": "1.0.0"
+}
