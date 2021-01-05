@@ -4,14 +4,7 @@ import argparse
 
 import numpy as np
 from PIL import Image
-# import tflite_runtime.interpreter as tflite
 import tensorflow.lite as tflite
-
-
-# def load_labels(filename):
-#     with open(filename, 'r') as f:
-#         return [line.strip() for line in f.readlines()]
-
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

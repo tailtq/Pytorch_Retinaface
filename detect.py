@@ -12,6 +12,8 @@ from models.retinaface import RetinaFace
 from utils.box_utils import decode, decode_landm
 import time
 
+# 2021-01-05 14:51:48.451438: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:200] libcuda reported version is: Not found: was unable to find libcuda.so DSO loaded into this program
+
 parser = argparse.ArgumentParser(description='Retinaface')
 
 parser.add_argument('-m', '--trained_model', default='./weights/Resnet50_Final.pth',
@@ -77,18 +79,18 @@ if __name__ == '__main__':
     print('Finished loading model!')
     print(net)
 
-    x = torch.randn(1, 3, 360, 360, requires_grad=True)
-    torch_out = net(x)
-    torch.onnx.export(net,  # model being run
-                      x,  # model input (or a tuple for multiple inputs)
-                      "test.onnx",  # where to save the model (can be a file or file-like object)
-                      export_params=True,  # store the trained parameter weights inside the model file
-                      opset_version=10,  # the ONNX version to export the model to
-                      do_constant_folding=True,  # whether to execute constant folding for optimization
-                      input_names=['input'],  # the model's input names
-                      output_names=['output'],  # the model's output names
-                      dynamic_axes={'input': {0: 'batch_size'},  # variable lenght axes
-                                    'output': {0: 'batch_size'}})
+    # x = torch.randn(1, 3, 360, 360, requires_grad=True)
+    # torch_out = net(x)
+    # torch.onnx.export(net,  # model being run
+    #                   x,  # model input (or a tuple for multiple inputs)
+    #                   "test.onnx",  # where to save the model (can be a file or file-like object)
+    #                   export_params=True,  # store the trained parameter weights inside the model file
+    #                   opset_version=10,  # the ONNX version to export the model to
+    #                   do_constant_folding=True,  # whether to execute constant folding for optimization
+    #                   input_names=['input'],  # the model's input names
+    #                   output_names=['output'],  # the model's output names
+    #                   dynamic_axes={'input': {0: 'batch_size'},  # variable lenght axes
+    #                                 'output': {0: 'batch_size'}})
 
     # MOBILENET
     # INFERENCE TIME: 0.0066
@@ -100,12 +102,12 @@ if __name__ == '__main__':
 
     resize = 1
     cudnn.benchmark = True
-    device = torch.device("cpu")
+    device = torch.device("cuda")
     net = net.to(device)
 
     # testing begin
     for i in range(100):
-        image_path = "imgs/1609319923031.JPEG"
+        image_path = "imgs/test-img.jpeg"
         img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
         img_raw = cv2.resize(img_raw, (360, 360))
 

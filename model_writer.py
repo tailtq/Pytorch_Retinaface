@@ -183,7 +183,7 @@ class MetadataPopulatorForImageClassifier(object):
     """Populates metadata and label file to the model file."""
     populator = _metadata.MetadataPopulator.with_model_file(self.model_file)
     populator.load_metadata_buffer(self.metadata_buf)
-    # populator.load_associated_files([self.label_file_path])
+    populator.load_associated_files([self.label_file_path])
     populator.populate()
 
 

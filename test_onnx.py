@@ -2,6 +2,7 @@ import cv2
 import torch
 import onnxruntime
 import numpy as np
+import time
 
 from data import cfg_re50, cfg_mnet
 from detect import load_model
@@ -20,14 +21,14 @@ net = load_model(net, "mobilenet0.25_Final.pth", False)
 net = net.to(device)
 net.eval()
 
-ort_session = onnxruntime.InferenceSession("test.onnx")
+ort_session = onnxruntime.InferenceSession("480-model.onnx")
 
 img = cv2.imread("imgs/test-img2.jpeg", cv2.IMREAD_COLOR)
 img = np.float32(img)
 img -= (104, 117, 123)
 
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = cv2.resize(img, (360, 360))
+img = cv2.resize(img, (480, 480))
 img = img.transpose((2, 0, 1))
 img = torch.from_numpy(img).unsqueeze(0)
 img = img.to(device)
