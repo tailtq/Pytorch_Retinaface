@@ -61,12 +61,12 @@ class ModelSpecificInfo(object):
 
 
 _MODEL_INFO = {
-    "360-float16.tflite":
+    "240-int8.tflite":
         ModelSpecificInfo(
             name="MobileNetV1 image classifier",
             version="v1",
-            image_width=360,
-            image_height=360,
+            image_width=240,
+            image_height=240,
             image_min=0,
             image_max=255,
             mean=[127.5],

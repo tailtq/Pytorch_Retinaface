@@ -79,18 +79,18 @@ if __name__ == '__main__':
     print('Finished loading model!')
     print(net)
 
-    # x = torch.randn(1, 3, 360, 360, requires_grad=True)
-    # torch_out = net(x)
-    # torch.onnx.export(net,  # model being run
-    #                   x,  # model input (or a tuple for multiple inputs)
-    #                   "test.onnx",  # where to save the model (can be a file or file-like object)
-    #                   export_params=True,  # store the trained parameter weights inside the model file
-    #                   opset_version=10,  # the ONNX version to export the model to
-    #                   do_constant_folding=True,  # whether to execute constant folding for optimization
-    #                   input_names=['input'],  # the model's input names
-    #                   output_names=['output'],  # the model's output names
-    #                   dynamic_axes={'input': {0: 'batch_size'},  # variable lenght axes
-    #                                 'output': {0: 'batch_size'}})
+    x = torch.randn(1, 3, 240, 240, requires_grad=True)
+    torch_out = net(x)
+    torch.onnx.export(net,  # model being run
+                      x,  # model input (or a tuple for multiple inputs)
+                      "240-model.onnx",  # where to save the model (can be a file or file-like object)
+                      export_params=True,  # store the trained parameter weights inside the model file
+                      opset_version=10,  # the ONNX version to export the model to
+                      do_constant_folding=True,  # whether to execute constant folding for optimization
+                      input_names=['input'],  # the model's input names
+                      output_names=['output'],  # the model's output names
+                      dynamic_axes={'input': {0: 'batch_size'},  # variable lenght axes
+                                    'output': {0: 'batch_size'}})
 
     # MOBILENET
     # INFERENCE TIME: 0.0066
@@ -107,9 +107,9 @@ if __name__ == '__main__':
 
     # testing begin
     for i in range(100):
-        image_path = "imgs/test-img.jpeg"
+        image_path = "imgs/test-img3.jpg"
         img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
-        img_raw = cv2.resize(img_raw, (360, 360))
+        img_raw = cv2.resize(img_raw, (240, 240))
 
         img = np.float32(img_raw)
 

@@ -18,12 +18,12 @@ img = cv2.resize(img, (480, 480)).transpose(2, 0, 1)
 imgs = np.expand_dims(img, axis=0)
 
 with tf.device("/gpu:0"):
-    imported = tf.saved_model.load('tf-480')
+    imported = tf.saved_model.load('tf-4802')
     inference_func = imported.signatures["serving_default"]
 
     imgs = tf.convert_to_tensor(imgs, dtype=tf.float32)
 
-    for i in range(10000):
+    for i in range(100):
         start_time = time.time()
         inference_func(input=imgs)
         print(time.time() - start_time)

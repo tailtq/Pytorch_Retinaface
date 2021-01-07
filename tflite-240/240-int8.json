@@ -7,7 +7,7 @@
       "input_tensor_metadata": [
         {
           "name": "image",
-          "description": "Input image to be classified. The expected image is 360 x 360, with three channels (red, blue, and green) per pixel. Each value in the tensor is a single byte between 0 and 255.",
+          "description": "Input image to be classified. The expected image is 240 x 240, with three channels (red, blue, and green) per pixel. Each value in the tensor is a single byte between 0 and 255.",
           "content": {
             "content_properties_type": "ImageProperties",
             "content_properties": {
