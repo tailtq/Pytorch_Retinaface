@@ -79,11 +79,11 @@ if __name__ == '__main__':
     print('Finished loading model!')
     print(net)
 
-    x = torch.randn(1, 3, 240, 240, requires_grad=True)
+    x = torch.randn(1, 3, 480, 480, requires_grad=True)
     torch_out = net(x)
     torch.onnx.export(net,  # model being run
                       x,  # model input (or a tuple for multiple inputs)
-                      "240-model.onnx",  # where to save the model (can be a file or file-like object)
+                      "test2.onnx",  # where to save the model (can be a file or file-like object)
                       export_params=True,  # store the trained parameter weights inside the model file
                       opset_version=10,  # the ONNX version to export the model to
                       do_constant_folding=True,  # whether to execute constant folding for optimization

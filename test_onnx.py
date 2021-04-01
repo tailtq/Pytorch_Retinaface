@@ -17,11 +17,11 @@ device = torch.device("cuda")
 
 torch.set_grad_enabled(False)
 net = RetinaFace(cfg=cfg_mnet, phase='test')
-net = load_model(net, "mobilenet0.25_Final.pth", False)
+net = load_model(net, "weights/mobilenet0.25_Final.pth", False)
 net = net.to(device)
 net.eval()
 
-ort_session = onnxruntime.InferenceSession("480-model.onnx")
+ort_session = onnxruntime.InferenceSession("weights/test2.onnx")
 
 img = cv2.imread("imgs/test-img2.jpeg", cv2.IMREAD_COLOR)
 img = np.float32(img)

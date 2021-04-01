@@ -15,7 +15,7 @@ def representative_dataset():
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-converter = tf.lite.TFLiteConverter.from_saved_model(f"tf-{str(img_size)}")
+converter = tf.lite.TFLiteConverter.from_saved_model(f"weights/test2.pb")
 
 # int8 - Convert using CPU (not working in GPU - document here: https://www.tensorflow.org/lite/performance/post_training_quantization)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
