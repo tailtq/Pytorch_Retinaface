@@ -4,7 +4,7 @@ In this tutorial, we will convert model trained in PyTorch to Tensorflow Lite ve
 
 The PyTorch model I am using here is [RetinaFace](https://github.com/biubug6/Pytorch_Retinaface) with MobileNet backbone. The journey is not so simple, we have to convert PyTorch --> ONNX --> Tensorflow --> Tensorflow Lite. So in this article, I will write down the steps for revision and future projects.
 
-1. Step 1 - Convert PyTorch to ONNX model
+## 1. Step 1 - Convert PyTorch to ONNX model
 
 ```python
 from data import cfg_mnet
@@ -32,7 +32,7 @@ torch.onnx.export(net,  # model being run
 ```
 
 
-2. Step 2 - Benchmark ONNX and PyTorch model
+## 2. Step 2 - Benchmark ONNX and PyTorch model
 
 ```python
 import cv2
@@ -85,7 +85,7 @@ print("Exported model has been tested with ONNXRuntime, and the result looks goo
 ```
 
 
-3. Step 3 - Convert ONNX to Tensorflow model
+## 3. Step 3 - Convert ONNX to Tensorflow model
 
 Pull docker image of tf-nightly: `docker pull tensorflow/tensorflow:devel-gpu`
 
@@ -107,7 +107,7 @@ cd /app && onnx-tf convert -i weights/test2.onnx -o weights/test2.pb
 Now you can see your test2.pb folder in your root project. You can also test your converted model by using `test_tensorflow.py` file.
 
 
-4. Step 4 - Convert Tensorflow to Tensorflow Lite
+## 4. Step 4 - Convert Tensorflow to Tensorflow Lite
 
 ```python
 import os
@@ -140,4 +140,4 @@ tflite_model = converter.convert()
 open("weights/test2.tflite", "wb").write(tflite_model)
 ```
 
-Now you can be able to run test in mobile. Good luck!
+Now you can be able to run test in mobile or test TFLite model using `test_tflite.py`. Good luck!
