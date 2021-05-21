@@ -1,0 +1,6 @@
+**/__pycache__/
+**/.idea/
+build/
+dist/
+image2face.egg-info/
+image2face/retinaface/weights/Retinaface_Resnet50_Final.pth
