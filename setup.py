@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.0.1"
+VERSION = "0.0.7"
 DESCRIPTION = "Face Recognition package"
 LONG_DESCRIPTION = "Face Recognition package"
 
@@ -13,11 +13,12 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
+    package_data={"image2face": ["image2face/weights/*"]},
     install_requires=[
         "numpy",
         "torch==1.7.0",
-        "torchvision",
-        "opencv-python==4.4.0"
+        "torchvision==0.8.1",
+        "opencv-python==4.4.0.46"
     ],
     keywords=["python", "computer vision", "face detection"],
     classifiers=[

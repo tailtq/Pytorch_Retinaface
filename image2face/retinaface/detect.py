@@ -5,11 +5,11 @@ import torch
 import numpy as np
 from pathlib import Path
 
-from config import cfg_mnet, cfg_re50
-from layers.functions.prior_box import PriorBox
-from utils.nms.py_cpu_nms import py_cpu_nms
-from models.retinaface import RetinaFace
-from utils import decode, decode_landm, download_file_from_drive
+from .config import cfg_mnet, cfg_re50
+from .layers.functions.prior_box import PriorBox
+from .utils.nms.py_cpu_nms import py_cpu_nms
+from .models.retinaface import RetinaFace
+from .utils import decode, decode_landm, download_file_from_drive
 
 
 dir_path = Path(__file__).parent
@@ -140,12 +140,3 @@ class RetinafaceDetection:
         f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
 
         return {f(key): value for key, value in state_dict.items()}
-
-
-# if __name__ == "__main__":
-#     face_detection = RetinafaceDetection("mobile0.25", use_cpu=True)
-#
-#     img = cv2.imread("test.jpg", cv2.IMREAD_COLOR)
-#     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#
-#     print(face_detection.predict(img).shape)
