@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import cv2
 
 from .backbones import get_model
 from ..base_prediction import BasePrediction
@@ -23,7 +24,7 @@ class ArcfacePrediction(BasePrediction):
         self.model = self._load_pretrained_model(backbone, self.backbone_paths[backbone])
 
     def predict(self, img, width=112):
-        img = self.resize_img(img, width)
+        img = cv2.resize(img, (width, width))
         img = np.transpose(img, (2, 0, 1))
         img = torch.from_numpy(img).unsqueeze(0).float()
         img.div_(255).sub_(0.5).div_(0.5)
