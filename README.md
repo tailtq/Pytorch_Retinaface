@@ -6,10 +6,11 @@ From [FreeCodeCamp](https://www.freecodecamp.org/): https://www.freecodecamp.org
 
 ## Packages available:
 - PyTorch Retinaface. [Original repository](https://github.com/biubug6/Pytorch_Retinaface)
+- PyTorch Arcface. [Original repository](https://github.com/deepinsight/insightface/tree/master/recognition/arcface_torch)
 
 
 ## Future update:
-- Arcface
+- Add more
 
 
 ## Commands:

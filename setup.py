@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.0.7"
+VERSION = "0.0.9"
 DESCRIPTION = "Face Recognition package"
 LONG_DESCRIPTION = "Face Recognition package"
 
@@ -12,8 +12,9 @@ setup(
     author_email="<ltquoctaidn98@gmail.com>",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    packages=find_packages(),
-    package_data={"image2face": ["image2face/weights/*"]},
+    packages=find_packages(exclude=[
+        "image2face.*.weights.*",
+    ]),
     install_requires=[
         "numpy",
         "torch==1.7.0",

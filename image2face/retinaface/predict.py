@@ -5,7 +5,8 @@ import torch
 import numpy as np
 from pathlib import Path
 
-from .config import cfg_mnet, cfg_re50
+from ..base_prediction import BasePrediction
+from .config import cfg_mobilenet, cfg_re50
 from .layers.functions.prior_box import PriorBox
 from .utils.nms.py_cpu_nms import py_cpu_nms
 from .models.retinaface import RetinaFace
@@ -13,30 +14,33 @@ from .utils import decode, decode_landm, download_file_from_drive
 
 
 dir_path = Path(__file__).parent
-
-network_cfgs = {
-    "mobile0.25": cfg_mnet,
-    "resnet50": cfg_re50,
-}
-model_paths = {
-    "mobile0.25": dir_path / "weights/mobilenet0.25_Final.pth",
-    "resnet50": dir_path / "weights/Retinaface_Resnet50_Final.pth",
-}
 torch.set_grad_enabled(False)
 
 
-class RetinafaceDetection:
-    def __init__(self, network_name, confidence_threshold=0.5, nms_threshold=0.4, use_cpu=False):
-        self.network_name = network_name
+class RetinafacePrediction(BasePrediction):
+    network_cfgs = {
+        "mobile0.25": cfg_mobilenet,
+        "resnet50": cfg_re50,
+    }
+    backbone_paths = {
+        "mobile0.25": dir_path / "weights/mobilenet0.25_Final.pth",
+        "resnet50": dir_path / "weights/Retinaface_Resnet50_Final.pth",
+    }
+
+    @torch.no_grad()
+    def __init__(self, backbone, confidence_threshold=0.5, nms_threshold=0.4, use_cpu=False):
+        super().__init__(use_cpu)
+
+        self.backbone = backbone
         self.confidence_threshold = confidence_threshold
         self.nms_threshold = nms_threshold
         self.use_cpu = use_cpu
-        self.cfg = network_cfgs[self.network_name]
+        self.cfg = self.network_cfgs[self.backbone]
 
-        self.model = self._load_trained_model(self.cfg, model_paths[self.network_name], self.use_cpu)
+        self.model = self._load_trained_model(self.cfg, self.backbone_paths[self.backbone], self.use_cpu)
 
     def predict(self, img, width=480):
-        device = self._get_device(self.use_cpu)
+        device = self._get_device()
         origin_h, origin_w, _ = img.shape
 
         # resize image to reduce inference time
@@ -90,7 +94,7 @@ class RetinafaceDetection:
 
         return dets
 
-    def predict_batch(self, imgs: list):
+    def predict_batch(self, imgs: list, width=480):
         return
 
     def _load_trained_model(self, cfg, trained_path, use_cpu):
@@ -98,9 +102,10 @@ class RetinafaceDetection:
             print("Download model...")
             download_file_from_drive("1jLd-yASoo34hqrG0F0k9NV04SYCPD4Qa", trained_path)
 
-        print("Loading pretrained model from {}".format(trained_path))
         model = RetinaFace(cfg=cfg, phase="test")
-        device = self._get_device(use_cpu)
+        device = self._get_device()
+
+        print("Load Retinaface model successfully")
 
         if use_cpu:
             pretrained_dict = torch.load(trained_path, map_location=lambda storage, loc: storage)
@@ -120,10 +125,6 @@ class RetinafaceDetection:
         return model
 
     @staticmethod
-    def _get_device(use_cpu):
-        return torch.device("cpu" if use_cpu else "cuda:0")
-
-    @staticmethod
     def _check_keys(model, pretrained_state_dict):
         ckpt_keys = set(pretrained_state_dict.keys())
         model_keys = set(model.state_dict().keys())
@@ -135,7 +136,7 @@ class RetinafaceDetection:
 
     @staticmethod
     def _remove_prefix(state_dict, prefix):
-        ''' Old style model is stored with all names of parameters sharing common prefix 'module.' '''
+        """ Old style model is stored with all names of parameters sharing common prefix 'module.' """
         print('remove prefix \'{}\''.format(prefix))
         f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
 

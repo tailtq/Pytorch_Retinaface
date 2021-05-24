@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from ...utils.box_utils import match, log_sum_exp
-from ...config import cfg_mnet
+from ...config import cfg_mobilenet
 
-GPU = cfg_mnet['gpu_train']
+GPU = cfg_mobilenet['gpu_train']
 
 
 class MultiBoxLoss(nn.Module):

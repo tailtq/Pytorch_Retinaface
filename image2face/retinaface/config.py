@@ -1,6 +1,6 @@
 # config.py
 
-cfg_mnet = {
+cfg_mobilenet = {
     'name': 'mobilenet0.25',
     'min_sizes': [[16, 32], [64, 128], [256, 512]],
     'steps': [8, 16, 32],
