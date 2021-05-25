@@ -40,6 +40,12 @@ class RetinafacePrediction(BasePrediction):
         self.model = self._load_trained_model(self.cfg, self.backbone_paths[self.backbone], self.use_cpu)
 
     def predict(self, img, width=480):
+        """
+            Output shape of the function is a matrix having shape (x, 15)
+            - 0-3: top left and bottom right coordinates of face bounding box
+            - 4: confidence
+            - 5-14: landmarks 
+        """
         device = self._get_device()
         origin_h, origin_w, _ = img.shape
 
@@ -58,7 +64,7 @@ class RetinafacePrediction(BasePrediction):
                                        origin_w, origin_h])
         scale_landmark = scale_landmark.to(device)
         # predict bounding boxes + landmarks
-        loc, conf, landms = self.model(img)
+        loc, conf, landmarks = self.model(img)
 
         # get objects having confidence greater or equal to threshold
         scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
@@ -78,24 +84,81 @@ class RetinafacePrediction(BasePrediction):
         boxes = boxes[indices]
 
         # decode bounding boxes by anchor boxes and model prediction's location
-        landms = decode_landm(landms.data.squeeze(0), prior_data, self.cfg['variance'])
-        landms = landms * scale_landmark
-        landms = landms.cpu().numpy()
-        landms = landms[indices]
+        landmarks = decode_landm(landmarks.data.squeeze(0), prior_data, self.cfg['variance'])
+        landmarks = landmarks * scale_landmark
+        landmarks = landmarks.cpu().numpy()
+        landmarks = landmarks[indices]
 
         # do nms
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
         keep = py_cpu_nms(dets, self.nms_threshold)
         dets = dets[keep, :]
-        landms = landms[keep]
+        landmarks = landmarks[keep]
 
-        # tl_x, tl_y, br_x, br_y, conf, landmark_1_x, landmark_1_y, ..., landmark_5_x, landmark_5_y
-        dets = np.concatenate((dets, landms), axis=1)
+        dets = np.concatenate((dets, landmarks), axis=1)
 
         return dets
 
-    def predict_batch(self, imgs: list, width=480):
-        return
+    @staticmethod
+    def align_face(image, detection):
+        x1, y1, x2, y2 = detection[:4].astype(int)
+        face = image[y1:y2, x1:x2]
+
+        landmarks = detection[5:]
+        landmarks[::2] -= x1
+        landmarks[1::2] -= y1
+
+        left_eye_x, left_eye_y, right_eye_x, right_eye_y = landmarks[:4]
+        dx = right_eye_x - left_eye_x
+        dy = right_eye_y - left_eye_y
+        # calculate the angle between x-axis and the vector of 2 eyes
+        angle = np.degrees(np.arctan2(dy, dx))
+
+        # calculate the center of eyes
+        center_eyes_x = int((left_eye_x + right_eye_x) / 2)
+        center_eyes_y = int((left_eye_y + right_eye_y) / 2)
+
+        # create rotation matrix base on the center and angle without scaling
+        rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale=1)
+        # align face
+        aligned_face = cv2.warpAffine(face, rotation_matrix, (face.shape[1], face.shape[0]), flags=cv2.INTER_CUBIC)
+
+        return aligned_face
+
+    # def align_face(self, image, landmarks, desiredLeftEye=(0.35, 0.35), desiredFaceWidth=256):
+    #     left_eye_x, left_eye_y, right_eye_x, right_eye_y = landmarks[:4]
+    #     dx = right_eye_x - left_eye_x
+    #     dy = right_eye_y - left_eye_y
+    #
+    #     desiredFaceHeight = desiredFaceWidth
+    #     desiredRightEyeX = 1.0 - desiredLeftEye[0]
+    #     # determine the scale of the new resulting image by taking
+    #     # the ratio of the distance between eyes in the *current*
+    #     # image to the ratio of distance between eyes in the
+    #     # *desired* image
+    #     dist = np.sqrt((dx ** 2) + (dy ** 2)) * 1.1
+    #     desiredDist = (desiredRightEyeX - desiredLeftEye[0])
+    #     desiredDist *= desiredFaceWidth
+    #     scale = desiredDist / dist
+    #
+    #     tX = desiredFaceWidth * 0.5
+    #     tY = desiredFaceHeight * desiredLeftEye[1]
+    #     # rotation_matrix[0, 2] += (tX - eyesCenter[0])
+    #     # rotation_matrix[1, 2] += (tY - eyesCenter[1])
+    #
+    #
+    #     angle = np.degrees(np.arctan2(dy, dx))
+    #     center_eyes_x = int((left_eye_x + right_eye_x) / 2)
+    #     center_eyes_y = int((left_eye_y + right_eye_y) / 2)
+    #
+    #     rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale)
+    #     # rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, 1)
+    #     rotation_matrix[0, 2] += tX - center_eyes_x
+    #     rotation_matrix[1, 2] += tY - center_eyes_y
+    #
+    #     aligned_face = cv2.warpAffine(image, rotation_matrix, (desiredFaceWidth, desiredFaceHeight), flags=cv2.INTER_CUBIC)
+    #
+    #     return aligned_face
 
     def _load_trained_model(self, cfg, trained_path, use_cpu):
         if not os.path.exists(trained_path):
