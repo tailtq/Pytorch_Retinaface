@@ -10,7 +10,9 @@ From [FreeCodeCamp](https://www.freecodecamp.org/): https://www.freecodecamp.org
 
 
 ## Future update:
-- Add more
+- dlib face detection
+- dlib face recognition
+- dlib landmark extraction
 
 
 ## Commands:
