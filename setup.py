@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.1.1"
+VERSION = "0.1.3"
 DESCRIPTION = "Face Recognition package"
 LONG_DESCRIPTION = "Face Recognition package"
 

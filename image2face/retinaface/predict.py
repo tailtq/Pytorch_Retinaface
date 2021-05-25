@@ -101,6 +101,11 @@ class RetinafacePrediction(BasePrediction):
 
     @staticmethod
     def align_face(image, detection):
+        """
+            Align face with image and detection
+            Reference: https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/
+        """
+        detection = detection.copy()
         x1, y1, x2, y2 = detection[:4].astype(int)
         face = image[y1:y2, x1:x2]
 
@@ -112,6 +117,7 @@ class RetinafacePrediction(BasePrediction):
         dx = right_eye_x - left_eye_x
         dy = right_eye_y - left_eye_y
         # calculate the angle between x-axis and the vector of 2 eyes
+        # Reference: http://www.davdata.nl/math/vectdirection.html
         angle = np.degrees(np.arctan2(dy, dx))
 
         # calculate the center of eyes
