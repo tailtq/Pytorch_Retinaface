@@ -11,6 +11,7 @@ from .layers.functions.prior_box import PriorBox
 from .utils.nms.py_cpu_nms import py_cpu_nms
 from .models.retinaface import RetinaFace
 from .utils import decode, decode_landm, download_file_from_drive
+import imutils
 
 
 dir_path = Path(__file__).parent
@@ -109,6 +110,8 @@ class RetinafacePrediction(BasePrediction):
         x1, y1, x2, y2 = detection[:4].astype(int)
         face = image[y1:y2, x1:x2]
 
+        assert face.shape[0] != 0 and face.shape[1] != 0
+
         landmarks = detection[5:]
         landmarks[::2] -= x1
         landmarks[1::2] -= y1
@@ -126,45 +129,21 @@ class RetinafacePrediction(BasePrediction):
 
         # create rotation matrix base on the center and angle without scaling
         rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale=1)
+        aligned_points = cv2.transform(np.array([[[x1, y1]], [[x2, y2]]]), rotation_matrix)
+        aligned_points = np.squeeze(aligned_points)
+
+        # tX = desiredFaceWidth * 0.5
+        # tY = desiredFaceHeight * desiredLeftEye[1]
+        # # rotation_matrix[0, 2] += (tX - eyesCenter[0])
+        # # rotation_matrix[1, 2] += (tY - eyesCenter[1])
+        # rotation_matrix[0, 2] += (tX - eyesCenter[0])
+        # rotation_matrix[1, 2] += (tY - eyesCenter[1])
         # align face
-        aligned_face = cv2.warpAffine(face, rotation_matrix, (face.shape[1], face.shape[0]), flags=cv2.INTER_CUBIC)
+        aligned_image = cv2.warpAffine(image, rotation_matrix, (image.shape[1], image.shape[0]), flags=cv2.INTER_CUBIC)
 
-        return aligned_face
+        print(aligned_image.shape, aligned_points.shape, aligned_points[0])
 
-    # def align_face(self, image, landmarks, desiredLeftEye=(0.35, 0.35), desiredFaceWidth=256):
-    #     left_eye_x, left_eye_y, right_eye_x, right_eye_y = landmarks[:4]
-    #     dx = right_eye_x - left_eye_x
-    #     dy = right_eye_y - left_eye_y
-    #
-    #     desiredFaceHeight = desiredFaceWidth
-    #     desiredRightEyeX = 1.0 - desiredLeftEye[0]
-    #     # determine the scale of the new resulting image by taking
-    #     # the ratio of the distance between eyes in the *current*
-    #     # image to the ratio of distance between eyes in the
-    #     # *desired* image
-    #     dist = np.sqrt((dx ** 2) + (dy ** 2)) * 1.1
-    #     desiredDist = (desiredRightEyeX - desiredLeftEye[0])
-    #     desiredDist *= desiredFaceWidth
-    #     scale = desiredDist / dist
-    #
-    #     tX = desiredFaceWidth * 0.5
-    #     tY = desiredFaceHeight * desiredLeftEye[1]
-    #     # rotation_matrix[0, 2] += (tX - eyesCenter[0])
-    #     # rotation_matrix[1, 2] += (tY - eyesCenter[1])
-    #
-    #
-    #     angle = np.degrees(np.arctan2(dy, dx))
-    #     center_eyes_x = int((left_eye_x + right_eye_x) / 2)
-    #     center_eyes_y = int((left_eye_y + right_eye_y) / 2)
-    #
-    #     rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale)
-    #     # rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, 1)
-    #     rotation_matrix[0, 2] += tX - center_eyes_x
-    #     rotation_matrix[1, 2] += tY - center_eyes_y
-    #
-    #     aligned_face = cv2.warpAffine(image, rotation_matrix, (desiredFaceWidth, desiredFaceHeight), flags=cv2.INTER_CUBIC)
-    #
-    #     return aligned_face
+        return aligned_image[aligned_points[0][1]:aligned_points[1][1], aligned_points[0][0]:aligned_points[1][0]]
 
     def _load_trained_model(self, cfg, trained_path, use_cpu):
         if not os.path.exists(trained_path):
