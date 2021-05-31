@@ -11,6 +11,7 @@ from .layers.functions.prior_box import PriorBox
 from .utils.nms.py_cpu_nms import py_cpu_nms
 from .models.retinaface import RetinaFace
 from .utils import decode, decode_landm, download_file_from_drive
+import imutils
 
 
 dir_path = Path(__file__).parent
@@ -100,7 +101,7 @@ class RetinafacePrediction(BasePrediction):
         return dets
 
     @staticmethod
-    def align_face(image, detection):
+    def align_face(image, detection, desired_left_eye=(0.35, 0.35), width=None, height=None):
         """
             Align face with image and detection
             Reference: https://www.pyimagesearch.com/2017/05/22/face-alignment-with-opencv-and-python/
@@ -109,62 +110,48 @@ class RetinafacePrediction(BasePrediction):
         x1, y1, x2, y2 = detection[:4].astype(int)
         face = image[y1:y2, x1:x2]
 
-        landmarks = detection[5:]
-        landmarks[::2] -= x1
-        landmarks[1::2] -= y1
+        assert face.shape[0] != 0 and face.shape[1] != 0
 
+        # output size equals bounding box size
+        output_size = (x2 - x1, y2 - y1)
+
+        # handle landmarks to get rotation angle
+        landmarks = detection[5:]
         left_eye_x, left_eye_y, right_eye_x, right_eye_y = landmarks[:4]
         dx = right_eye_x - left_eye_x
         dy = right_eye_y - left_eye_y
+
         # calculate the angle between x-axis and the vector of 2 eyes
         # Reference: http://www.davdata.nl/math/vectdirection.html
         angle = np.degrees(np.arctan2(dy, dx))
+        additional_x_translation_ratio = (1 + angle / 100 / 2)
 
         # calculate the center of eyes
+        # rotate the image based on this pont (origin
         center_eyes_x = int((left_eye_x + right_eye_x) / 2)
         center_eyes_y = int((left_eye_y + right_eye_y) / 2)
 
         # create rotation matrix base on the center and angle without scaling
         rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale=1)
+        tx = output_size[0] * 0.5
+        ty = output_size[1] * desired_left_eye[1]
+
+        # translate image to face position (scaling tx, ty to correctly identify the position of the face)
+        rotation_matrix[0, 2] += (additional_x_translation_ratio * tx - center_eyes_x)
+        rotation_matrix[1, 2] += (ty - center_eyes_y)
+
         # align face
-        aligned_face = cv2.warpAffine(face, rotation_matrix, (face.shape[1], face.shape[0]), flags=cv2.INTER_CUBIC)
+        aligned_face = cv2.warpAffine(image, rotation_matrix, output_size, flags=cv2.INTER_CUBIC)
+        face_height, face_width, _ = aligned_face.shape
+
+        if width is not None and height is not None:
+            return cv2.resize(aligned_face, (width, height))
+        elif width is not None:
+            return cv2.resize(aligned_face, (width, int(width / face_width * face_height)))
+        elif height is not None:
+            return cv2.resize(aligned_face, (int(height / face_height * face_width), height))
 
         return aligned_face
-
-    # def align_face(self, image, landmarks, desiredLeftEye=(0.35, 0.35), desiredFaceWidth=256):
-    #     left_eye_x, left_eye_y, right_eye_x, right_eye_y = landmarks[:4]
-    #     dx = right_eye_x - left_eye_x
-    #     dy = right_eye_y - left_eye_y
-    #
-    #     desiredFaceHeight = desiredFaceWidth
-    #     desiredRightEyeX = 1.0 - desiredLeftEye[0]
-    #     # determine the scale of the new resulting image by taking
-    #     # the ratio of the distance between eyes in the *current*
-    #     # image to the ratio of distance between eyes in the
-    #     # *desired* image
-    #     dist = np.sqrt((dx ** 2) + (dy ** 2)) * 1.1
-    #     desiredDist = (desiredRightEyeX - desiredLeftEye[0])
-    #     desiredDist *= desiredFaceWidth
-    #     scale = desiredDist / dist
-    #
-    #     tX = desiredFaceWidth * 0.5
-    #     tY = desiredFaceHeight * desiredLeftEye[1]
-    #     # rotation_matrix[0, 2] += (tX - eyesCenter[0])
-    #     # rotation_matrix[1, 2] += (tY - eyesCenter[1])
-    #
-    #
-    #     angle = np.degrees(np.arctan2(dy, dx))
-    #     center_eyes_x = int((left_eye_x + right_eye_x) / 2)
-    #     center_eyes_y = int((left_eye_y + right_eye_y) / 2)
-    #
-    #     rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, scale)
-    #     # rotation_matrix = cv2.getRotationMatrix2D((center_eyes_x, center_eyes_y), angle, 1)
-    #     rotation_matrix[0, 2] += tX - center_eyes_x
-    #     rotation_matrix[1, 2] += tY - center_eyes_y
-    #
-    #     aligned_face = cv2.warpAffine(image, rotation_matrix, (desiredFaceWidth, desiredFaceHeight), flags=cv2.INTER_CUBIC)
-    #
-    #     return aligned_face
 
     def _load_trained_model(self, cfg, trained_path, use_cpu):
         if not os.path.exists(trained_path):
