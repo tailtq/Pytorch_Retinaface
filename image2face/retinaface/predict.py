@@ -11,8 +11,6 @@ from .layers.functions.prior_box import PriorBox
 from .utils.nms.py_cpu_nms import py_cpu_nms
 from .models.retinaface import RetinaFace
 from .utils import decode, decode_landm, download_file_from_drive
-import imutils
-
 
 dir_path = Path(__file__).parent
 torch.set_grad_enabled(False)
@@ -124,7 +122,6 @@ class RetinafacePrediction(BasePrediction):
         # calculate the angle between x-axis and the vector of 2 eyes
         # Reference: http://www.davdata.nl/math/vectdirection.html
         angle = np.degrees(np.arctan2(dy, dx))
-        additional_x_translation_ratio = (1 + angle / 100 / 2)
 
         # calculate the center of eyes
         # rotate the image based on this pont (origin
@@ -136,9 +133,11 @@ class RetinafacePrediction(BasePrediction):
         tx = output_size[0] * 0.5
         ty = output_size[1] * desired_left_eye[1]
 
+        new_center_eye = cv2.transform(np.array([[[center_eyes_x, center_eyes_y]]]), rotation_matrix) \
+            .astype(int).squeeze()
         # translate image to face position (scaling tx, ty to correctly identify the position of the face)
-        rotation_matrix[0, 2] += (additional_x_translation_ratio * tx - center_eyes_x)
-        rotation_matrix[1, 2] += (ty - center_eyes_y)
+        rotation_matrix[0, 2] += (tx - new_center_eye[0])
+        rotation_matrix[1, 2] += (ty - new_center_eye[1])
 
         # align face
         aligned_face = cv2.warpAffine(image, rotation_matrix, output_size, flags=cv2.INTER_CUBIC)
@@ -179,6 +178,22 @@ class RetinafacePrediction(BasePrediction):
         model = model.to(device)
 
         return model
+
+    @staticmethod
+    def visualize_detection(image, detection):
+        image = image.copy()
+
+        # draw bounding box
+        cv2.rectangle(image, (detection[0], detection[1]), (detection[2], detection[3]), (0, 0, 255), 2)
+
+        # landmarks
+        cv2.circle(image, (detection[5], detection[6]), 1, (0, 0, 255), 4)
+        cv2.circle(image, (detection[7], detection[8]), 1, (0, 255, 255), 4)
+        cv2.circle(image, (detection[9], detection[10]), 1, (255, 0, 255), 4)
+        cv2.circle(image, (detection[11], detection[12]), 1, (0, 255, 0), 4)
+        cv2.circle(image, (detection[13], detection[14]), 1, (255, 0, 0), 4)
+
+        return image
 
     @staticmethod
     def _check_keys(model, pretrained_state_dict):
