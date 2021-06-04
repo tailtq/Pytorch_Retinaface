@@ -12,7 +12,8 @@ torch.set_grad_enabled(False)
 
 class ArcfacePrediction(BasePrediction):
     backbone_paths = {
-        "resnet50": dir_path / "weights/resnet50.pth"
+        "resnet50": dir_path / "weights/resnet50.pth",
+        "resnet100": dir_path / "weights/resnet100.pth",
     }
 
     @torch.no_grad()
@@ -24,12 +25,12 @@ class ArcfacePrediction(BasePrediction):
     def predict(self, img, width=112):
         img = cv2.resize(img, (width, width))
         img = np.transpose(img, (2, 0, 1))
-        img = torch.from_numpy(img).unsqueeze(0).float() / 255
+        img = torch.tensor(img, requires_grad=False).unsqueeze(0).float() / 255
         img.div_(255).sub_(0.5).div_(0.5)
 
         img = img.to(self._get_device())
 
-        features = self.model(img).numpy().squeeze(0)
+        features = self.model(img).detach().cpu().numpy().squeeze(0)
 
         return features
 
