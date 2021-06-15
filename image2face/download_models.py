@@ -13,7 +13,7 @@ def download_models():
         return
 
     print("Downloading models...")
-    download_file_from_drive("1QTZyChGlaZZDAU267AZAgO4HZwnYbj4f", zip_file)
+    download_file_from_drive("1n093yqr4Wj_qs5egrCsYETX7kYprSjLN", zip_file)
     print("Extracting models...")
 
     with zipfile.ZipFile(zip_file, "r") as zip_ref:

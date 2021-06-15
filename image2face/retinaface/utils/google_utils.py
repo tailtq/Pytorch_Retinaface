@@ -30,3 +30,7 @@ def save_response_content(response, destination):
         for chunk in response.iter_content(CHUNK_SIZE):
             if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
+
+
+if __name__ == "__main__":
+    download_file_from_drive("12llN-EmB0NN0mbFNZk8BSAugbmzqNdPQ", "test.zip")

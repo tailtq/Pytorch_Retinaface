@@ -40,6 +40,9 @@ class ArcfacePrediction(BasePrediction):
         model.load_state_dict(weight, strict=False)
         model.eval()
 
+        device = self._get_device()
+        model = model.to(device)
+
         return model
 
 # if __name__ == "__main__":
