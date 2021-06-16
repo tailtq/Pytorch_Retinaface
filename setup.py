@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.1.8"
+VERSION = "0.1.9"
 DESCRIPTION = "Face Recognition package"
 LONG_DESCRIPTION = "Face Recognition package"
 
@@ -17,6 +17,7 @@ setup(
     ]),
     install_requires=[
         "numpy",
+        "scikit-learn",
         "torch==1.7.0",
         "torchvision==0.8.1",
         "opencv-python==4.4.0.46"
